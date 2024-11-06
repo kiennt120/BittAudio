@@ -108,11 +108,11 @@ def main(config):
 
     def music_blacklist_fn(synapse: protocol.MusicGeneration) -> typing.Tuple[bool, str]:
         if synapse.dendrite.hotkey not in metagraph.hotkeys:
-            bt.logging.trace(f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}")
+            bt.logging.info(f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}")
             return True, "Unrecognized hotkey"
         elif synapse.dendrite.hotkey in metagraph.hotkeys and metagraph.S[metagraph.hotkeys.index(synapse.dendrite.hotkey)] < lib.MIN_STAKE:
             # Ignore requests from entities with low stake.
-            bt.logging.trace(
+            bt.logging.info(
                 f"Blacklisting hotkey {synapse.dendrite.hotkey} with low stake"
             )
             return True, "Low stake"
@@ -123,7 +123,7 @@ def main(config):
     def music_priority_fn(synapse: protocol.MusicGeneration) -> float:
         caller_uid = metagraph.hotkeys.index(synapse.dendrite.hotkey)
         priority = float(metagraph.S[caller_uid])
-        bt.logging.trace(f"Prioritizing {synapse.dendrite.hotkey} with stake: {priority}")
+        bt.logging.infor(f"Prioritizing {synapse.dendrite.hotkey} with stake: {priority}")
         return priority
 
     def convert_music_to_tensor(audio_file):
@@ -140,6 +140,7 @@ def main(config):
             bt.logging.error(f"Error converting file: {e}")
 
     def ProcessMusic(synapse: protocol.MusicGeneration) -> protocol.MusicGeneration:
+        bt.logging.info(f"Processing music request from: {metagraph.hotkeys.index(synapse.dendrite.hotkey)}")
         bt.logging.info(f"Generating music with model: {config.music_path if config.music_path else config.music_model}")
         print(f"synapse.text_input: {synapse.text_input}")
         print(f"synapse.duration: {synapse.duration}")
@@ -150,9 +151,9 @@ def main(config):
             return None
         try:
             sampling_rate = 32000
-            write_wav("random_sample.wav", rate=sampling_rate, data=music)
-            bt.logging.success("Music generated and saved to random_sample.wav")
-            music_tensor = convert_music_to_tensor("random_sample.wav")
+            write_wav(f"random_sample_{my_subnet_uid}.wav", rate=sampling_rate, data=music)
+            bt.logging.success(f"Music generated and saved to random_sample_{my_subnet_uid}.wav")
+            music_tensor = convert_music_to_tensor(f"random_sample_{my_subnet_uid}.wav")
             synapse.music_output = music_tensor
             return synapse
         except Exception as e:
