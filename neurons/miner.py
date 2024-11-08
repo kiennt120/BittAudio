@@ -123,7 +123,7 @@ def main(config):
     def music_priority_fn(synapse: protocol.MusicGeneration) -> float:
         caller_uid = metagraph.hotkeys.index(synapse.dendrite.hotkey)
         priority = float(metagraph.S[caller_uid])
-        bt.logging.infor(f"Prioritizing {synapse.dendrite.hotkey} with stake: {priority}")
+        bt.logging.info(f"Prioritizing {synapse.dendrite.hotkey} with stake: {priority}")
         return priority
 
     def convert_music_to_tensor(audio_file):
