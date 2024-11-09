@@ -143,10 +143,11 @@ def main(config):
             return None
 
     def ProcessMusic(synapse: protocol.MusicGeneration) -> protocol.MusicGeneration:
+        start = time.time()
         bt.logging.info(f"Processing music request from: {metagraph.hotkeys.index(synapse.dendrite.hotkey)}")
-        bt.logging.info(f"Generating music with model: {config.music_path if config.music_path else config.music_model}")
-        print(f"synapse.text_input: {synapse.text_input}")
-        print(f"synapse.duration: {synapse.duration}")
+        # bt.logging.info(f"Generating music: {config.music_path if config.music_path else config.music_model}")
+        bt.logging.info(f"synapse.text_input: {synapse.text_input}")
+        bt.logging.info(f"synapse.duration: {synapse.duration}")
         
         try:
             response = requests.post("http://localhost:5000/generate_music", json={"text_input": synapse.text_input, "duration": synapse.duration})
@@ -154,16 +155,20 @@ def main(config):
                 path = response.json()["path"]
                 if path is None:
                     bt.logging.error(f"Failed to generate music")
+                    bt.logging.info(f"time = {time.time() - start:.3f}s")
                     return None
                 music_tensor = convert_music_to_tensor(path)
                 synapse.music_output = music_tensor
-                bt.logging.info(f"Music for {synapse.text_input} generated")
+                bt.logging.info(f"Music for '{synapse.text_input}' from {metagraph.hotkeys.index(synapse.dendrite.hotkey)} generated")
+                bt.logging.info(f"time = {time.time() - start:.3f}s")
                 return synapse
             else:
                 bt.logging.error(f"Failed to generate music")
+                bt.logging.info(f"time = {time.time() - start:.3f}s")
                 return None
         except Exception as e:
             bt.logging.error(f"Error processing music output: {e}")
+            bt.logging.info(f"time = {time.time() - start:.3f}s")
             return None
         # music = ttm_models.generate_music(synapse.text_input, synapse.duration)
 

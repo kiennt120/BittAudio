@@ -65,24 +65,24 @@ def generate_music(text_input: str = Body(...), duration: int = Body(...)):
     path = os.path.join(output_path, text_input + ".wav")
     
     if os.path.isfile(path):
-        print(f"Successfully generated")
+        print(f"Successfully generated '{text_input}'")
         print(f"time gen music: {time.time() - start_time}")
         return {"path": path}
     start_gen_music = time.time()
     music = ttm_models.generate_music(text_input, duration)
     print(f"time gen music: {time.time() - start_gen_music:.3f}")
     if music is None:
-        print(f"Failed to generate music")
+        print(f"Failed to generate music '{text_input}'")
         print(f"time: {time.time() - start_time}")
         return {"path": None}
     try:
         sample_rate = args.sample_rate
         write_wav(path, sample_rate, music)
-        print(f"Successfully generated")
+        print(f"Successfully generated '{text_input}'")
         print(f"time: {time.time() - start_time}")
         return {"path": path}
     except Exception as e:
-        print(f"Error occurred: {e}")
+        print(f"Error occurred '{text_input}': {e}")
         print(f"time: {time.time() - start_time}")
         return {"path": None}
 
