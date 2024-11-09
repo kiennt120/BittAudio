@@ -62,7 +62,7 @@ os.makedirs(output_path, exist_ok=True)
 def generate_music(text_input: str = Body(...), duration: int = Body(...)):
     start_time = time.time()
     print(f"text: {text_input}, duration: {duration}")
-    path = os.path.join(output_path, text_input)
+    path = os.path.join(output_path, text_input + ".wav")
     
     if os.path.isfile(path):
         print(f"Successfully generated")
@@ -88,5 +88,5 @@ def generate_music(text_input: str = Body(...), duration: int = Body(...)):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=args.host, port=args.port, debug=args.debug)
+    uvicorn.run(app, host=args.host, port=args.port)
     

@@ -75,19 +75,19 @@ def main(config):
     bt.logging.info(f"Running TTM miner for subnet: {config.netuid} on network: {config.subtensor.chain_endpoint}")
 
     # Text-to-Music Model Setup
-    try:
-        if config.music_path:
-            bt.logging.info(f"Using custom model for Text-To-Music from: {config.music_path}")
-            ttm_models = MusicGenerator(model_path=config.music_path)
-        elif config.music_model in ["facebook/musicgen-medium", "facebook/musicgen-large"]:
-            bt.logging.info(f"Using Text-To-Music model: {config.music_model}")
-            ttm_models = MusicGenerator(model_path=config.music_model)
-        else:
-            bt.logging.error(f"Invalid music model: {config.music_model}")
-            exit(1)
-    except Exception as e:
-        bt.logging.error(f"Error initializing Text-To-Music model: {e}")
-        exit(1)
+    # try:
+    #     if config.music_path:
+    #         bt.logging.info(f"Using custom model for Text-To-Music from: {config.music_path}")
+    #         ttm_models = MusicGenerator(model_path=config.music_path)
+    #     elif config.music_model in ["facebook/musicgen-medium", "facebook/musicgen-large"]:
+    #         bt.logging.info(f"Using Text-To-Music model: {config.music_model}")
+    #         ttm_models = MusicGenerator(model_path=config.music_model)
+    #     else:
+    #         bt.logging.error(f"Invalid music model: {config.music_model}")
+    #         exit(1)
+    # except Exception as e:
+    #     bt.logging.error(f"Error initializing Text-To-Music model: {e}")
+    #     exit(1)
 
     # Bittensor object setup
     wallet = bt.wallet(config=config)
@@ -140,6 +140,7 @@ def main(config):
                 return None
         except Exception as e:
             bt.logging.error(f"Error converting file: {e}")
+            return None
 
     def ProcessMusic(synapse: protocol.MusicGeneration) -> protocol.MusicGeneration:
         bt.logging.info(f"Processing music request from: {metagraph.hotkeys.index(synapse.dendrite.hotkey)}")
@@ -156,13 +157,14 @@ def main(config):
                     return None
                 music_tensor = convert_music_to_tensor(path)
                 synapse.music_output = music_tensor
+                bt.logging.info(f"Music for {synapse.text_input} generated")
                 return synapse
             else:
                 bt.logging.error(f"Failed to generate music")
                 return None
         except Exception as e:
             bt.logging.error(f"Error processing music output: {e}")
-            return
+            return None
         # music = ttm_models.generate_music(synapse.text_input, synapse.duration)
 
         # if music is None:
