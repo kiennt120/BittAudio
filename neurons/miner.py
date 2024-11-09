@@ -12,6 +12,8 @@ import ttm.protocol as protocol
 # from ttm.protocol import MusicGeneration
 from scipy.io.wavfile import write as write_wav
 from transformers import AutoProcessor, MusicgenForConditionalGeneration
+import requests
+
 
 # Set the project root path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -144,21 +146,39 @@ def main(config):
         bt.logging.info(f"Generating music with model: {config.music_path if config.music_path else config.music_model}")
         print(f"synapse.text_input: {synapse.text_input}")
         print(f"synapse.duration: {synapse.duration}")
-        music = ttm_models.generate_music(synapse.text_input, synapse.duration)
-
-        if music is None:
-            bt.logging.error("No music generated!")
-            return None
+        
         try:
-            sampling_rate = 32000
-            write_wav(f"random_sample_{my_subnet_uid}.wav", rate=sampling_rate, data=music)
-            bt.logging.success(f"Music generated and saved to random_sample_{my_subnet_uid}.wav")
-            music_tensor = convert_music_to_tensor(f"random_sample_{my_subnet_uid}.wav")
-            synapse.music_output = music_tensor
-            return synapse
+            response = requests.post("http://localhost:5000/generate_music", json={"text_input": synapse.text_input, "duration": synapse.duration})
+            if response.status_code == 200:
+                path = response.json()["path"]
+                if path is None:
+                    bt.logging.error(f"Failed to generate music")
+                    return None
+                music_tensor = convert_music_to_tensor(path)
+                synapse.music_output = music_tensor
+                return synapse
+            else:
+                bt.logging.error(f"Failed to generate music")
+                return None
         except Exception as e:
             bt.logging.error(f"Error processing music output: {e}")
-            return None
+            return
+        # music = ttm_models.generate_music(synapse.text_input, synapse.duration)
+
+        # if music is None:
+        #     bt.logging.error("No music generated!")
+        #     return None
+        # try:
+        #     sampling_rate = 32000
+        #     write_wav(f"random_sample_{my_subnet_uid}.wav", rate=sampling_rate, data=music)
+        #     bt.logging.success(f"Music generated and saved to random_sample_{my_subnet_uid}.wav")
+        #     music_tensor = convert_music_to_tensor(f"random_sample_{my_subnet_uid}.wav")
+        #     synapse.music_output = music_tensor
+        #     return synapse
+        # except Exception as e:
+        #     bt.logging.error(f"Error processing music output: {e}")
+        #     return None
+        
 
     ######################## Attach Axon and Serve ########################
 
